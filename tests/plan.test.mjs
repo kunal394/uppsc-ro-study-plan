@@ -1,10 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
+import { dirname, resolve, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 import { days, weeks, papers, resources, pyqGroups, paperURL } from "../plan.mjs";
 import { questions } from "../questions.mjs";
+import { topics, subjects, mainsTopics, topicIDsForDay, hindiTopicsForDay, topicQuestionIDs } from "../learning.mjs";
+import { analyses, categories, countsFor } from "../analysis.mjs";
 const require = createRequire(import.meta.url);
 const { validateState, validDate, dateForDay, score } = require("../app.js");
 
@@ -45,22 +49,82 @@ test("locators bind to the exact file and valid page/question ranges", () => {
   }
 });
 
-test("generated HTML includes all content without JavaScript and has no broken local anchors", async () => {
+const root = fileURLToPath(new URL("..", import.meta.url));
+async function htmlFiles(directory=root) {
+  const entries=await readdir(directory,{withFileTypes:true});
+  const files=[];
+  for(const entry of entries) {
+    if(entry.name.startsWith(".") || entry.name==="node_modules") continue;
+    const path=resolve(directory,entry.name);
+    if(entry.isDirectory()) files.push(...await htmlFiles(path));
+    else if(entry.name.endsWith(".html")) files.push(path);
+  }
+  return files;
+}
+
+test("focused static hierarchy has valid routes, unique IDs and local anchors", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
-  assert.equal((html.match(/class="day-card"/g) || []).length, 84);
-  assert.equal((html.match(/data-task="/g) || []).length, 420);
-  const ids = Array.from(html.matchAll(/\bid="([^"]+)"/g), m => m[1]);
-  assert.equal(new Set(ids).size, ids.length, "IDs are unique");
-  for (const match of html.matchAll(/href="#([^"]+)"/g)) assert.ok(ids.includes(match[1]), match[1]);
+  assert.ok(html.length<20000,"home is compact");
+  assert.equal((html.match(/data-task="/g)||[]).length,0,"home does not dump day tasks");
+  const cache=new Map(await Promise.all((await htmlFiles()).map(async path=>[path,await readFile(path,"utf8")])));
+  assert.ok(cache.size>200,"real focused page hierarchy");
+  for(const [path,content] of cache) {
+    const ids=Array.from(content.matchAll(/\bid="([^"]+)"/g),m=>m[1]);
+    assert.equal(new Set(ids).size,ids.length,relative(root,path));
+    assert.ok(content.includes('href="#main"'));
+    for(const [,href] of content.matchAll(/\b(?:href|src)="([^"]+)"/g)) {
+      if(/^(https?:|data:)/.test(href)) continue;
+      const [target,anchor]=href.split("#");
+      const destination=target?resolve(dirname(path),target):path;
+      assert.ok(!relative(root,destination).startsWith(".."),href);
+      const destContent=cache.get(destination)??await readFile(destination,"utf8");
+      if(anchor) assert.ok(destContent.includes(`id="${anchor}"`),`${relative(root,path)} -> ${href}`);
+    }
+  }
   for (const day of days) {
-    const card = html.split(`id="day-${day.day}"`)[1].split('<div class="day-actions')[0];
+    const card=cache.get(resolve(root,`days/day-${String(day.day).padStart(2,"0")}.html`));
+    assert.equal((card.match(/data-task="/g)||[]).length,5);
     assert.ok(card.includes("https://"), `Day ${day.day}`);
     if (day.paper) {
       for (const url of papers[day.paper].urls) assert.ok(card.includes(url), `Day ${day.day}: assigned paper`);
     } else {
       assert.ok(card.includes("PYQ") && card.includes("#page="), `Day ${day.day}: direct page locators`);
+      assert.ok(card.indexOf("Learn the topic before solving")<card.indexOf('class="practice-question"'));
     }
   }
+});
+
+test("topic curriculum and daily learning links cover every subject and Hindi area", () => {
+  assert.equal(new Set(topics.concat(mainsTopics).map(t=>t.id)).size,topics.length+mainsTopics.length);
+  for(const subject of Object.keys(subjects)) assert.ok(topics.some(t=>t.subject===subject),subject);
+  for(const t of topics.concat(mainsTopics)) {
+    assert.ok(t.subtopics.length>=5,t.id);
+    assert.ok(t.lesson.length>=2 && t.lesson.every(p=>p.length>100),t.id);
+    assert.ok(t.example.length>100,t.id);
+    assert.ok(t.checks.length>=3,t.id);
+    for(const r of t.readings) assert.ok(resources[r.resource] && r.sections.length,t.id);
+  }
+  for(const d of days) {
+    assert.ok(topicIDsForDay(d).length,d.day);
+    for(const id of topicIDsForDay(d).concat(hindiTopicsForDay(d))) assert.ok(topics.some(t=>t.id===id),id);
+  }
+  for(const [topic,ids] of Object.entries(topicQuestionIDs)) {
+    assert.ok(topics.some(t=>t.id===topic),topic);
+    for(const id of ids) assert.ok(questions.some(q=>q.id===id),id);
+  }
+});
+
+test("published distribution comes from complete exclusive exact-file ledgers", () => {
+  for(const x of analyses) {
+    assert.equal(x.rows.length,140,x.year);
+    assert.deepEqual(x.rows.map(r=>r.number),Array.from({length:140},(_,i)=>i+1));
+    for(const r of x.rows) assert.ok(categories[r.primary] && r.label && r.page>=2 && r.page<=x.pages);
+    assert.equal(Object.values(countsFor(x)).reduce((a,b)=>a+b,0),140);
+  }
+  const x=analyses.find(a=>a.year===2025);
+  assert.equal(x.url,paperURL);
+  for(const q of questions.filter(q=>q.number<=140)) assert.equal(x.rows[q.number-1].page,q.page,q.id);
+  assert.equal(x.rows[128].primary,"geography","Q129 is an ocean current, not dated news");
 });
 
 test("progress import rejects malformed/cross-site IDs and excludes unknown personal fields", () => {
@@ -105,14 +169,16 @@ test("adapted question bank covers every assigned category with valid editorial 
 });
 
 test("every rendered answer starts hidden and has an explicit accessible reveal control", async () => {
-  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
-  const controls = Array.from(html.matchAll(/class="answer-toggle enhanced-only" aria-expanded="false" aria-controls="([^"]+)"/g));
-  assert.ok(controls.length > 84);
-  for (const control of controls) {
-    assert.ok(html.includes(`class="question-answer" id="${control[1]}" hidden`), control[1]);
+  let total=0;
+  for(const path of await htmlFiles()) {
+    const html=await readFile(path,"utf8");
+    const controls=Array.from(html.matchAll(/class="answer-toggle enhanced-only" type="button" aria-expanded="false" aria-controls="([^"]+)"/g));
+    total+=controls.length;
+    for(const control of controls) assert.ok(html.includes(`class="question-answer" id="${control[1]}" hidden`),control[1]);
+    assert.equal((html.match(/type="radio"[^>]*checked/g)||[]).length,0);
+    if(controls.length) assert.ok(html.includes("<noscript><details"),"native hidden-answer fallback");
   }
-  assert.equal((html.match(/type="radio"[^>]*checked/g) || []).length, 0);
-  assert.ok(html.includes("not verbatim extraction of the full paper"));
+  assert.ok(total>84);
 });
 
 test("one activation reveals an answer exactly once even with multiple completion inputs", async () => {
@@ -173,4 +239,52 @@ test("one activation reveals an answer exactly once even with multiple completio
   inputs[0].listeners.change[0]();
   assert.deepEqual(JSON.parse(storage.get("uppsc-ro-study-v1")).done, ["1-gs"]);
   assert.equal(get("test-answer").hidden, true, "progress changes never reveal answers");
+});
+
+test("focused-page progress is global and import/reset/export retain safety guards", async () => {
+  const elements=new Map();
+  for(const id of ["storage-status","progress-label","task-progress","progress","resume","start-date","import","export","reset"]) {
+    elements.set(id,{listeners:{},value:"",dataset:{dayBase:"days/"},classList:{toggle(){}},
+      addEventListener(event,fn){this.listeners[event]=fn;}});
+  }
+  const state={version:1,startDate:"2024-02-28",done:["1-gs","1-hindi","1-pyq","1-current","1-recall"]};
+  const storage=new Map([["uppsc-ro-study-v1",JSON.stringify(state)]]);
+  let approved=false,confirmations=0,exported;
+  const download={click(){},remove(){}};
+  const document={
+    getElementById:id=>elements.get(id)||null,querySelectorAll:()=>[],
+    documentElement:{classList:{add(){}}},addEventListener(){},
+    body:{appendChild(){}},createElement:()=>download
+  };
+  const window={
+    location:{hash:"",pathname:"/plan.html"},addEventListener(){},setTimeout(fn){fn();},
+    confirm(){confirmations++;return approved;},
+    localStorage:{getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)}
+  };
+  const app=await readFile(new URL("../app.js",import.meta.url),"utf8");
+  runInNewContext(app,{document,window,Intl,console:{warn(){}},Blob:class{constructor(parts){this.parts=parts;}},
+    URL:{createObjectURL(blob){exported=blob.parts[0];return "blob:test";},revokeObjectURL(){}}});
+  assert.equal(elements.get("progress-label").textContent,"1 of 84 days complete","no rendered day cards required");
+  assert.equal(elements.get("resume").href,"days/day-02.html");
+  const importFile=async content=>elements.get("import").listeners.change({
+    target:{value:"test.json",files:[{size:content.length,text:async()=>content}]}
+  });
+  await importFile('{"version":2}');
+  assert.equal(confirmations,0,"invalid file never reaches replacement confirmation");
+  assert.equal(storage.get("uppsc-ro-study-v1"),JSON.stringify(state));
+  const replacement={version:1,startDate:"",done:["84-recall"]};
+  await importFile(JSON.stringify(replacement));
+  assert.equal(storage.get("uppsc-ro-study-v1"),JSON.stringify(state),"cancel preserves progress");
+  approved=true;
+  await importFile(JSON.stringify(replacement));
+  assert.deepEqual(JSON.parse(storage.get("uppsc-ro-study-v1")),replacement);
+  elements.get("export").listeners.click();
+  assert.deepEqual(JSON.parse(exported),replacement);
+  assert.equal(download.download,"uppsc-study-progress.json");
+  approved=false;
+  elements.get("reset").listeners.click();
+  assert.deepEqual(JSON.parse(storage.get("uppsc-ro-study-v1")),replacement);
+  approved=true;
+  elements.get("reset").listeners.click();
+  assert.deepEqual(JSON.parse(storage.get("uppsc-ro-study-v1")),{version:1,startDate:"",done:[]});
 });

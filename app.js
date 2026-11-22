@@ -56,6 +56,14 @@
   var statusBox = document.getElementById("storage-status");
   var storageAvailable = true;
   var searchText = new Map(cards.map(function (card) { return [card, card.textContent.toLocaleLowerCase()]; }));
+  function on(id, event, handler) {
+    var element = document.getElementById(id);
+    if (element) element.addEventListener(event, handler);
+  }
+  function text(id, value) {
+    var element = document.getElementById(id);
+    if (element) element.textContent = value;
+  }
 
   function announce(message, isError) {
     statusBox.textContent = message;
@@ -88,6 +96,7 @@
   }
 
   function applyFilters() {
+    if (!search || !weekFilter || !statusFilter) return;
     var term = search.value.trim().toLocaleLowerCase();
     var shown = 0;
     cards.forEach(function (card) {
@@ -101,43 +110,64 @@
     document.querySelectorAll(".week-block").forEach(function (week) {
       week.hidden = !Array.from(week.querySelectorAll(".day-card")).some(function (card) { return !card.hidden; });
     });
-    document.getElementById("filter-result").textContent = "Showing " + shown + " of 84 days";
-    document.getElementById("no-results").hidden = shown > 0;
+    text("filter-result", "Showing " + shown + " of " + cards.length + " days");
+    var empty = document.getElementById("no-results");
+    if (empty) empty.hidden = shown > 0;
   }
 
   function update() {
     var done = new Set(state.done);
     inputs.forEach(function (input) { input.checked = done.has(input.dataset.task); });
     var completedDays = 0;
+    var firstUnfinished = 0;
+    for (var day = 1; day <= 84; day++) {
+      if (kinds.every(function (kind) { return done.has(day + "-" + kind); })) completedDays++;
+      else if (!firstUnfinished) firstUnfinished = day;
+    }
     cards.forEach(function (card) {
       var n = Number(card.dataset.day);
       var count = kinds.filter(function (kind) { return done.has(n + "-" + kind); }).length;
       card.querySelector(".day-status").textContent = count + "/5";
       card.classList.toggle("is-complete", count === 5);
-      if (count === 5) completedDays++;
       var dateLabel = card.querySelector(".scheduled-date");
       dateLabel.textContent = state.startDate ? " · " + new Intl.DateTimeFormat(undefined, {
         month: "short", day: "numeric", year: "numeric", timeZone: "UTC"
       }).format(new Date(dateForDay(state.startDate, n) + "T12:00:00Z")) : "";
     });
-    document.getElementById("progress-label").textContent = completedDays + " of 84 days complete";
-    document.getElementById("task-progress").textContent = done.size + " of 420 tasks complete";
-    document.getElementById("progress").value = done.size;
-    var first = cards.find(function (card) { return !card.classList.contains("is-complete"); });
-    document.getElementById("resume").href = first ? "#" + first.id : "#method";
-    document.getElementById("resume").textContent = first ? "Resume first unfinished day" : "All days complete · plan next cycle";
-    startInput.value = state.startDate;
+    text("progress-label", completedDays + " of 84 days complete");
+    text("task-progress", done.size + " of 420 tasks complete");
+    var progress = document.getElementById("progress");
+    if (progress) progress.value = done.size;
+    var resume = document.getElementById("resume");
+    if (resume) {
+      var base = resume.dataset.dayBase || "days/";
+      resume.href = firstUnfinished ? base + "day-" + String(firstUnfinished).padStart(2, "0") + ".html" : base + "../method.html#after-cycle";
+      resume.textContent = firstUnfinished ? "Resume first unfinished day" : "All days complete · plan next cycle";
+    }
+    if (startInput) startInput.value = state.startDate;
     applyFilters();
   }
 
   function jumpToHash() {
+    var pathname = window.location.pathname;
+    if (pathname && (pathname.endsWith("/") || pathname.endsWith("/index.html"))) {
+      var legacy = /^#(day|week)-([1-9]\d?)$/.exec(window.location.hash);
+      if (legacy && Number(legacy[2]) <= (legacy[1] === "day" ? 84 : 12)) {
+        window.location.replace((legacy[1] === "day" ? "days/day-" : "weeks/week-") + legacy[2].padStart(2, "0") + ".html");
+        return;
+      }
+      var oldPages = { daily:"plan.html", practice:"prelims.html", materials:"resources.html", mains:"mains.html",
+        scheme:"syllabus.html", start:"method.html", method:"method.html", papers:"papers.html" };
+      var destination = oldPages[window.location.hash.slice(1)];
+      if (destination) { window.location.replace(destination); return; }
+    }
     var match = /^#(day|week)-([1-9]\d?)$/.exec(window.location.hash);
     if (!match) return;
     var target = document.getElementById(match[1] + "-" + match[2]);
     if (!target) return;
-    weekFilter.value = match[1] === "day" ? target.dataset.week : match[2];
-    statusFilter.value = "all";
-    search.value = "";
+    if (weekFilter) weekFilter.value = match[1] === "day" ? target.dataset.week : match[2];
+    if (statusFilter) statusFilter.value = "all";
+    if (search) search.value = "";
     applyFilters();
     if (match[1] === "day") target.open = true;
     target.scrollIntoView({ block: "start" });
@@ -174,9 +204,9 @@
       if (saved) announce("Day " + button.dataset.complete + " marked complete. Uncheck individual tasks to undo.", false);
     });
   });
-  [weekFilter, statusFilter].forEach(function (select) { select.addEventListener("change", applyFilters); });
-  search.addEventListener("input", applyFilters);
-  startInput.addEventListener("change", function () {
+  [weekFilter, statusFilter].filter(Boolean).forEach(function (select) { select.addEventListener("change", applyFilters); });
+  if (search) search.addEventListener("input", applyFilters);
+  on("start-date", "change", function () {
     if (startInput.value && !validDate(startInput.value)) {
       announce("Please use a valid calendar start date.", true);
       startInput.value = state.startDate;
@@ -186,23 +216,23 @@
     save();
     update();
   });
-  document.getElementById("expand").addEventListener("click", function () {
+  on("expand", "click", function () {
     cards.filter(function (card) { return !card.hidden; }).forEach(function (card) {
       card.open = true;
       card.querySelectorAll("details").forEach(function (details) { details.open = true; });
     });
   });
-  document.getElementById("collapse").addEventListener("click", function () {
+  on("collapse", "click", function () {
     cards.filter(function (card) { return !card.hidden; }).forEach(function (card) { card.open = false; });
   });
-  document.getElementById("reset").addEventListener("click", function () {
+  on("reset", "click", function () {
     if (!window.confirm("Reset all task completion and the start date in this browser? Export a backup first if needed.")) return;
     state = { version: 1, startDate: "", done: [] };
     var saved = save();
     update();
     if (saved) announce("Progress and start date reset in this browser.", false);
   });
-  document.getElementById("export").addEventListener("click", function () {
+  on("export", "click", function () {
     var url = URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }));
     var a = document.createElement("a");
     a.href = url;
@@ -212,7 +242,7 @@
     a.remove();
     window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   });
-  document.getElementById("import").addEventListener("change", async function (event) {
+  on("import", "change", async function (event) {
     var file = event.target.files[0];
     if (!file) return;
     try {
@@ -230,7 +260,7 @@
       event.target.value = "";
     }
   });
-  document.getElementById("score-form").addEventListener("submit", function (event) {
+  on("score-form", "submit", function (event) {
     event.preventDefault();
     var result = document.getElementById("score-result");
     try {
@@ -255,7 +285,7 @@
   }
   window.addEventListener("beforeprint", preparePrint);
   window.addEventListener("afterprint", restorePrint);
-  document.getElementById("print").addEventListener("click", function () {
+  on("print", "click", function () {
     preparePrint();
     window.print();
     restorePrint();
