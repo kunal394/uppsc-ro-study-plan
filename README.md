@@ -20,6 +20,13 @@ It contains the six-area 60-mark syllabus, subtopic breakdowns, named reading
 sections, Hindi-specific resource guidance and the first-week daily learning
 route. Its learning time is separate from the shared PYQ/review block.
 
+Hindi lessons and the mains Hindi/essay guides retain Hindi first, with
+English translations of subtopics, explanations, examples, reading sections
+and objectives. Daily Hindi tasks and the resource hub also have English
+support. Practice translates the instruction, but keeps option meanings and
+English explanations inside the hidden answer panel to avoid giving away
+vocabulary or grammar answers before an attempt.
+
 All study
 content is static HTML and readable without JavaScript. JavaScript adds week/
 topic/status filters, calendar labels, local checkboxes, progress backup/import,

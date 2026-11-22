@@ -191,7 +191,7 @@
       answer.hidden = !reveal;
       button.setAttribute("aria-expanded", String(reveal));
       var hindi = button.closest("[lang]").getAttribute("lang") === "hi";
-      button.textContent = hindi ? reveal ? "उत्तर छिपाएँ" : "उत्तर दिखाएँ" : reveal ? "Hide answer" : "Reveal answer";
+      button.textContent = hindi ? reveal ? "उत्तर छिपाएँ / Hide answer" : "उत्तर दिखाएँ / Reveal answer" : reveal ? "Hide answer" : "Reveal answer";
     });
   });
   document.querySelectorAll("[data-complete]").forEach(function (button) {

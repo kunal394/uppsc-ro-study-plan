@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 import { days, weeks, papers, resources, pyqGroups, paperURL } from "../plan.mjs";
-import { questions } from "../questions.mjs";
-import { topics, subjects, mainsTopics, topicIDsForDay, hindiTopicsForDay, topicQuestionIDs } from "../learning.mjs";
+import { questions, hindiQuestionEnglish } from "../questions.mjs";
+import { topics, subjects, mainsTopics, topicIDsForDay, hindiTopicsForDay, topicQuestionIDs, hindiEnglish, hindiDailyEnglish } from "../learning.mjs";
 import { analyses, categories, countsFor } from "../analysis.mjs";
 const require = createRequire(import.meta.url);
 const { validateState, validDate, dateForDay, score } = require("../app.js");
@@ -50,6 +50,7 @@ test("locators bind to the exact file and valid page/question ranges", () => {
 });
 
 const root = fileURLToPath(new URL("..", import.meta.url));
+const escaped = value => value.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 async function htmlFiles(directory=root) {
   const entries=await readdir(directory,{withFileTypes:true});
   const files=[];
@@ -132,6 +133,46 @@ test("Hindi is discoverable from home, navigation, plan and materials with a com
     const nav=html.split('<nav aria-label="Main navigation">')[1].split("</nav>")[0];
     assert.ok(nav.includes("सामान्य हिन्दी")&&nav.includes("subjects/hindi.html"),file);
     assert.ok(html.includes("subjects/hindi.html#hindi-resources"),`${file}: direct resources link`);
+  }
+});
+
+test("Hindi lessons, objectives, readings and daily instructions have matched English support", async () => {
+  for(const topic of topics.concat(mainsTopics).filter(t=>t.subject==="hindi"||t.id==="mains-hindi"||t.id==="mains-essay")) {
+    const en=hindiEnglish[topic.id];
+    assert.ok(en?.title,topic.id);
+    const html=await readFile(resolve(root,`topics/${topic.id}.html`),"utf8");
+    for(const field of ["subtopics","lesson","checks"]) {
+      assert.equal(en[field].length,topic[field].length,`${topic.id}: ${field}`);
+      for(const translated of en[field]) assert.ok(html.includes(escaped(translated)),translated);
+    }
+    assert.equal(en.readings.length,topic.readings.length,topic.id);
+    for(let i=0;i<en.readings.length;i++) assert.equal(en.readings[i].sections.length,topic.readings[i].sections.length);
+    assert.ok(html.includes(escaped(en.example)),topic.id);
+    assert.ok(html.includes('lang="hi"')&&html.includes('lang="en"'),topic.id);
+  }
+  for(const day of days) {
+    const html=await readFile(resolve(root,`days/day-${String(day.day).padStart(2,"0")}.html`),"utf8");
+    assert.ok(html.includes(hindiDailyEnglish[day.hindi[0]]),day.day);
+  }
+});
+
+test("Hindi practice translations do not put option glosses or explanations before reveal", async () => {
+  for(const q of questions.filter(q=>q.language==="hi")) {
+    const en=hindiQuestionEnglish[q.id];
+    assert.ok(en?.stem&&en.explanation.length>60,q.id);
+    assert.equal(en.options.length,4,q.id);
+  }
+  const html=await readFile(resolve(root,"practice/subject-hindi.html"),"utf8");
+  const cards=html.split('<article class="practice-question"').slice(1);
+  assert.equal(cards.length,12);
+  for(const q of questions.filter(q=>q.language==="hi")) {
+    const card=cards.find(c=>c.includes(`hindi-${q.id}-answer`));
+    const [before,after]=card.split(`<div class="question-answer" id="hindi-${q.id}-answer" hidden>`);
+    assert.ok(before.includes(escaped(hindiQuestionEnglish[q.id].stem)),q.id);
+    assert.ok(!before.includes('class="answer-english-support"'),q.id);
+    assert.ok(after.includes('class="answer-english-support" lang="en"'),q.id);
+    assert.ok(!before.includes(escaped(hindiQuestionEnglish[q.id].explanation)),q.id);
+    assert.ok(after.includes("English explanation and option meanings"),q.id);
   }
 });
 

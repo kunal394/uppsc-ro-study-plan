@@ -516,3 +516,88 @@ export const topicQuestionIDs = {
   "hindi-synonyms":["treesyn","riversyn"],"hindi-tatsam":["hast","tvarit"],
   "hindi-adjectives":["quality","somepeople"],"hindi-one-word":["nisprih","northeast"]
 };
+
+export const hindiDailyEnglish = {
+  correction:"Spelling and sentence correction: learn one rule involving gender, number, pronouns or word choice; write 10 examples and explain the reason.",
+  antonyms:"Antonyms: study 15 useful opposite-word pairs; write five difficult pairs without notes and understand the meanings of incorrect alternatives.",
+  synonyms:"Synonyms: build meaning groups for 10 base words; identify one word that does not share the meaning in each group.",
+  tatsam:"Tatsam–tadbhav: write 15 pairs in two columns; recall in both directions rather than guessing from appearance.",
+  adjectives:"Modified noun, adjective and adjective modifier: identify their roles in 10 sentences and explain the classification.",
+  oneWord:"One-word substitutions: study 15 phrases; write the full meaning from the word and retrieve the word from the meaning.",
+  mixed:"Mixed revision of all six areas: write five difficult entries from each without notes and add the rule explaining each error."
+};
+
+export const hindiEnglish = {
+  "hindi-correction":{
+    title:"Spelling and sentence correction",
+    subtopics:["Vowel signs and standard spelling","Grammatical gender and number","Pronouns","Case relations and verb agreement","Word choice","Redundant words","Correcting form without changing meaning"],
+    lesson:["Understand the sentence's meaning and grammatical relationships before correcting it. Familiar sound alone does not establish standard usage. Check gender, number and verb agreement separately.",
+      "Spelling errors and sentence-structure errors are different. Practise difficult words in their correct form rather than repeatedly reinforcing an incorrect spelling. Colloquial and formal standard usage may differ."],
+    example:"Original exercise: compare ‘मेरे को यह पसंद नहीं’ with the formal ‘मुझे यह पसंद नहीं’ (‘I do not like this’). Explain the pronoun form and apply the same rule to five sentences of your own.",
+    readings:[{book:"One standard Hindi grammar book",sections:["Spelling","Gender and number","Pronouns","Sentence correction"]},{book:"Official Hindi dictionary resources",sections:["Check the meaning/form of a doubtful word"]}],
+    checks:["Write ten corrections with reasons","Separate a word-level error from a sentence-level error","Correct an earlier mistake again without looking"]
+  },
+  "hindi-antonyms":{
+    title:"Antonyms / opposite meanings",
+    subtopics:["Meaning and context","Common opposite-word pairs","Forms made with prefixes","Similar-looking incorrect alternatives","Pair matching","Retrieving the word from its meaning"],
+    lesson:["An antonym expresses an opposite aspect of meaning; adding any prefix does not necessarily produce the correct antonym. Memorising an opposite-looking form without knowing the word's meaning is weak preparation.",
+      "Study small meaning groups. Learn the correct pair and the meanings of the distractors, so you can handle both matching and exception questions."],
+    example:"Original exercise: understand सूक्ष्म–स्थूल as fine/subtle versus gross/coarse in the relevant context. कोमल–कठोर means soft versus hard, a different contrast. Use both pairs in sentences to show the distinction.",
+    readings:[{book:"Standard Hindi grammar",sections:["Antonyms"]},{book:"Dictionary",sections:["Confirm meanings"]}],
+    checks:["Study fifteen pairs with meanings","Write five difficult pairs in both directions","Explain the meaning of an incorrect alternative"]
+  },
+  "hindi-synonyms":{
+    title:"Synonyms / related meanings",
+    subtopics:["Base word and meaning group","Use in context","Words with multiple meanings","Non-synonymous exceptions","Matching","Use in sentences"],
+    lesson:["Synonyms share meaning, but cannot always be exchanged in every context. Check both the word's usual meaning and its use.",
+      "Build a small group for one base word and practise removing an unrelated word. Memorising a long list without checking meanings does not prepare you for exception questions."],
+    example:"Original exercise: group तरु, द्रुम and पादप with वृक्ष (‘tree’). विशिख usually means ‘arrow’, so it is an exception in this group.",
+    readings:[{book:"Standard Hindi grammar",sections:["Synonyms"]},{book:"Dictionary",sections:["Meaning and context"]}],
+    checks:["Build ten small meaning groups","Identify the incorrect entry in each group","Use three words in sentences"]
+  },
+  "hindi-tatsam":{
+    title:"Tatsam–tadbhav: Sanskrit-retained and historically evolved forms",
+    subtopics:["Recognising tatsam forms","Recognising tadbhav forms","Sound/form changes","Common pairs","Recall in both directions","Exceptions and uncertain forms"],
+    lesson:["Tatsam and tadbhav describe historical relationships between word forms: a tatsam form is retained from Sanskrit, while a tadbhav form has evolved through historical language change. A difficult-looking spelling alone is not enough to classify a word.",
+      "Confirm pairs from one standard source. After studying two columns, cover one column and recall in both directions; this reduces dependence on option order. English meaning alone cannot establish the historical Hindi/Sanskrit form."],
+    example:"Original exercise: make pairs हस्त–हाथ (‘hand’), अग्नि–आग (‘fire’) and दन्त–दाँत (‘tooth’). Write from tatsam to tadbhav and then reverse the direction. Keep the Hindi forms distinct even when the English meaning is the same.",
+    readings:[{book:"Standard Hindi grammar",sections:["Tatsam and tadbhav words"]}],
+    checks:["Make fifteen source-checked pairs","Write the forms in both directions without notes","Separate guessed pairs from verified ones"]
+  },
+  "hindi-adjectives":{
+    title:"Modified noun, adjective and adjective modifier",
+    subtopics:["Identifying the noun being described (visheshya)","Quality-describing adjectives","Definite/indefinite numeral adjectives","Quantity-describing adjectives","Pronominal adjective use","A modifier of an adjective (pravisheshan)","Count versus amount"],
+    lesson:["First identify the noun being described; then ask what the word does: describes a quality, number, quantity or another relationship. Do not classify a word such as कुछ (‘some’) solely by its appearance.",
+      "In कुछ लोग (‘some people’), the number of countable people is indefinite; in कुछ पानी (‘some water’), the context is an amount. A pravisheshan modifies an adjective rather than directly describing the noun. These Hindi grammar categories do not always map one-to-one onto English terminology."],
+    example:"Original exercise: in बहुत सुन्दर चित्र (‘a very beautiful picture’), चित्र is the noun being described, सुन्दर is the adjective and बहुत modifies that adjective. Compare these roles with कुछ लोग (‘some people’) and कुछ पानी (‘some water’).",
+    readings:[{book:"Standard Hindi grammar",sections:["Adjectives","The noun being described","Modifiers of adjectives"]}],
+    checks:["Identify the three roles in ten sentences","Distinguish number/count from quantity/amount","Give the reason for a classification, not just its name"]
+  },
+  "hindi-one-word":{
+    title:"One-word substitutions for phrases",
+    subtopics:["Person, quality or state","Relationships and places","Directions","Essential conditions of meaning","Distinguishing similar words","Recovering the full phrase from the word"],
+    lesson:["The one-word substitute must retain the phrase's essential meaning. A roughly similar meaning is insufficient: absence of fear and absence of desire describe different states.",
+      "Practise both directions: phrase to word and word to full meaning. This develops exact recall rather than vague recognition of a familiar word."],
+    example:"Original exercise: connect निर्भीक (‘fearless’) with absence of fear and निःस्पृह (‘free from desire’) with absence of longing. Place ईशान (north-east), आग्नेय (south-east), नैऋत्य (south-west) and वायव्य (north-west) on a direction diagram.",
+    readings:[{book:"Standard Hindi grammar",sections:["One word for a group of words"]}],
+    checks:["Study fifteen phrases with their meanings","Reconstruct the full meaning from each word","Explain the difference between words with nearby meanings"]
+  },
+  "mains-hindi":{
+    title:"Hindi comprehension, précis and official drafting",
+    subtopics:["Passage title and central meaning","Précis and tabular summary","Official and demi-official letters","Orders, circulars, memoranda and reminders","Press notices, notes and reports","Administrative/commercial translation","Idioms, proverbs and grammar","Word formation and computer fundamentals"],
+    lesson:["After prelims, practise précis separately: preserve the main meaning and essential facts. The title should express the subject; remove unnecessary detail without adding a new claim.",
+      "Letters, orders, memoranda and reports serve different purposes. Identify the purpose and recipient first, then choose the structure and formal language. In translation, check both meaning and administrative usage."],
+    example:"Original exercise: choose five essential facts for a fictional notice changing a meeting time. Write them in the form appropriate to the notice/order's purpose; do not use private names or real office information.",
+    readings:[{book:"Standard Hindi grammar and composition",sections:["Précis","Correspondence","Idioms","Word formation"]},{book:"Official Hindi dictionary resources",sections:["Administrative and commercial terminology"]}],
+    checks:["Write a précis preserving meaning","Choose the document form according to purpose","Translate in both directions with context"]
+  },
+  "mains-essay":{
+    title:"Hindi essay: planning, reasoning and time",
+    subtopics:["Section I: science, environment and technology","Economy, agriculture, industry and trade","Disasters","Section II: literature, culture and social/political topics","National/international events","Development programmes","800/1,200-word limits","Outline, argument, examples and conclusion"],
+    lesson:["Before writing, identify what the topic asks and your main position. Plan dimensions, their order, examples and limits of opposing arguments before expanding; filling the essay with unrelated facts is not preparation.",
+      "Practise the notified 800-word and 1,200-word essays separately. Review language, links between paragraphs and conclusion. Do not take time away from prelims by adding daily essays during the first cycle."],
+    example:"Original outline for ‘Urban water management’: problem, physical causes, governance, social impacts, solutions and a balanced conclusion. This is a self-created exercise topic, not a real PYQ.",
+    readings:[{book:"One composition/grammar source",sections:["Essay language and structure"]},{book:"Selected current affairs",sections:["Dated examples and thematic notes"]},{book:"Disaster guidance",sections:["Dimensions of problems and solutions"]}],
+    checks:["State the topic's demand and your position","Practise both word limits","Review relevance, examples and conclusion"]
+  }
+};
