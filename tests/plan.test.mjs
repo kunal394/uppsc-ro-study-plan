@@ -114,6 +114,27 @@ test("topic curriculum and daily learning links cover every subject and Hindi ar
   }
 });
 
+test("Hindi is discoverable from home, navigation, plan and materials with a complete learning hub", async () => {
+  const hub=await readFile(resolve(root,"subjects/hindi.html"),"utf8");
+  for(const anchor of ["hindi-breakdown","hindi-resources","hindi-daily"]) assert.ok(hub.includes(`id="${anchor}"`));
+  assert.equal((hub.match(/<strong>10 प्रश्न \/ 10 अंक<\/strong>/g)||[]).length,6);
+  for(const topic of topics.filter(t=>t.subject==="hindi")) {
+    assert.ok(hub.includes(`../topics/${topic.id}.html`),topic.id);
+    assert.ok(hub.includes(`../practice/${topic.id}.html`),topic.id);
+    for(const subtopic of topic.subtopics) assert.ok(hub.includes(subtopic),subtopic);
+  }
+  assert.ok(hub.includes(resources.hindi.url));
+  assert.ok(hub.includes(resources.ncert.url));
+  assert.ok(hub.includes(resources.cstt.url));
+  for(let n=1;n<=7;n++) assert.ok(hub.includes(`../days/day-${String(n).padStart(2,"0")}.html`));
+  for(const file of ["index.html","plan.html","resources.html","days/day-03.html"]) {
+    const html=await readFile(resolve(root,file),"utf8");
+    const nav=html.split('<nav aria-label="Main navigation">')[1].split("</nav>")[0];
+    assert.ok(nav.includes("सामान्य हिन्दी")&&nav.includes("subjects/hindi.html"),file);
+    assert.ok(html.includes("subjects/hindi.html#hindi-resources"),`${file}: direct resources link`);
+  }
+});
+
 test("published distribution comes from complete exclusive exact-file ledgers", () => {
   for(const x of analyses) {
     assert.equal(x.rows.length,140,x.year);

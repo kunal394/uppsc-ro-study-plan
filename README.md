@@ -14,6 +14,12 @@ is **home → prelims → subject → topic → practice**, with a separate
 original explanations/example, named reading sections and closed-book learning
 objectives. Daily work starts with learning, not only question drills.
 
+**Hindi hub:** [सामान्य हिन्दी](https://kunal394.github.io/uppsc-ro-study-plan/subjects/hindi.html)
+is linked prominently from the home page and every page's main navigation.
+It contains the six-area 60-mark syllabus, subtopic breakdowns, named reading
+sections, Hindi-specific resource guidance and the first-week daily learning
+route. Its learning time is separate from the shared PYQ/review block.
+
 All study
 content is static HTML and readable without JavaScript. JavaScript adds week/
 topic/status filters, calendar labels, local checkboxes, progress backup/import,
